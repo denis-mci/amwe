@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import webbrowser
 from collections.abc import Sequence
 
 from rich.console import Console
@@ -16,6 +18,7 @@ from rich.table import Table
 import amwe.collectors  # noqa: F401  (registers built-in collectors on import)
 from amwe.collectors.base import all_collectors
 from amwe.models import ScanResult, Target
+from amwe.reporter import local_server, render_html, server_url
 from amwe.verify.email_verify import ConsoleVerifier, Verifier
 
 _console = Console()
@@ -34,6 +37,11 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--image-url",
         help="public URL of a photo of yours to check for embedded GPS coordinates",
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="open the findings as a local web page (served on 127.0.0.1 until Ctrl+C)",
     )
     parser.add_argument(
         "--yes-this-is-me",
@@ -73,6 +81,15 @@ def _render(result: ScanResult) -> None:
     )
 
 
+def _serve_report(result: ScanResult) -> None:
+    with local_server(render_html(result)) as server:
+        url = server_url(server)
+        _console.print(f"\nReport at [link={url}]{url}[/] — press Ctrl+C to stop.")
+        webbrowser.open(url)
+        with contextlib.suppress(KeyboardInterrupt):
+            server.serve_forever()
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     username = args.username or args.email.split("@", 1)[0]
@@ -84,4 +101,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     result = asyncio.run(_run_collectors(target))
     _render(result)
+    if args.report:
+        _serve_report(result)
     return 0

@@ -65,7 +65,11 @@ A single-binary release and a Homebrew tap are on the roadmap.
 amwe you@example.com                 # scan your address
 amwe you@example.com --username me   # check a specific handle too
 amwe you@example.com --image-url https://example.com/me.jpg  # check a photo for GPS data
+amwe you@example.com --report        # open the findings as a local web page
 ```
+
+The report is served on `127.0.0.1` only and loads nothing from the network.
+GPS findings link to your own map app via a `geo:` URI, not to an online map.
 
 AMWE will only scan an address you can prove you control. See [LEGAL.md](LEGAL.md).
 

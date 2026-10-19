@@ -9,7 +9,7 @@ from __future__ import annotations
 from html import escape
 from string import Template
 
-from amwe.models import Finding, Profile, ScanResult, Severity
+from amwe.models import Attack, Finding, Profile, ScanResult, Severity
 
 _SEVERITY_RANK = {severity: rank for rank, severity in enumerate(Severity)}
 
@@ -34,6 +34,11 @@ li.low { border-color: #b7950b; }
 .map { display: block; margin-top: 0.25rem; }
 .profile { background: rgba(127, 140, 141, 0.12); padding: 0.75rem 1rem; border-radius: 6px; }
 .provenance { opacity: 0.6; font-size: 0.85rem; }
+.attack { border: 2px solid #c0392b; padding: 0.75rem 1rem; border-radius: 6px; }
+.sim-banner { background: #c0392b; color: #fff; padding: 0.5rem 0.75rem;
+  border-radius: 4px; font-weight: 600; }
+.email-body { white-space: pre-wrap; background: rgba(127, 140, 141, 0.12);
+  padding: 0.75rem; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -41,6 +46,7 @@ li.low { border-color: #b7950b; }
 <p>Scan of <strong>$email</strong>: $count public traces found.
 All of this is legal to look up — that is the point.</p>
 $profile
+$attack
 <ul>
 $items
 </ul>
@@ -55,7 +61,9 @@ _PROVENANCE = {
 }
 
 
-def render_html(result: ScanResult, profile: Profile | None = None) -> str:
+def render_html(
+    result: ScanResult, profile: Profile | None = None, attack: Attack | None = None
+) -> str:
     """Return the report for ``result`` as a complete HTML document."""
     findings = sorted(result.findings, key=lambda f: _SEVERITY_RANK[f.severity], reverse=True)
     items = "\n".join(_finding_item(finding) for finding in findings)
@@ -63,6 +71,7 @@ def render_html(result: ScanResult, profile: Profile | None = None) -> str:
         email=escape(result.target.email),
         count=len(findings),
         profile=_profile_section(profile),
+        attack=_attack_section(attack),
         items=items or "<li>No public traces found.</li>",
     )
 
@@ -75,6 +84,22 @@ def _profile_section(profile: Profile | None) -> str:
         '<section class="profile"><h2>The picture this builds</h2>'
         f"<p>{escape(profile.summary)}</p>"
         f'<p class="provenance">{escape(note)}</p></section>'
+    )
+
+
+def _attack_section(attack: Attack | None) -> str:
+    if attack is None:
+        return ""
+    email = attack.email
+    body = escape(email.body)
+    return (
+        '<section class="attack"><h2>The attack this makes possible</h2>'
+        '<p class="sim-banner">Simulation — AMWE generated this to show you. '
+        "Nothing was sent, and the login page never accepts input.</p>"
+        f"<p><strong>Subject:</strong> {escape(email.subject)}</p>"
+        f'<p class="email-body">{body}</p>'
+        '<p><a href="/login" rel="noreferrer">Open the teaching login page</a>'
+        " — it looks real and rejects everything you type.</p></section>"
     )
 
 

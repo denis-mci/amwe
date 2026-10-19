@@ -16,8 +16,9 @@ from rich.console import Console
 from rich.table import Table
 
 import amwe.collectors  # noqa: F401  (registers built-in collectors on import)
+from amwe.attacker import build_attack, render_interception_page, render_login_page
 from amwe.collectors.base import all_collectors
-from amwe.models import Profile, ScanResult, Target
+from amwe.models import Attack, Profile, ScanResult, Target
 from amwe.profiler import build_profile
 from amwe.reporter import local_server, render_html, server_url
 from amwe.verify.email_verify import ConsoleVerifier, Verifier
@@ -45,6 +46,11 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         help="open the findings as a local web page (served on 127.0.0.1 until Ctrl+C)",
     )
     parser.add_argument(
+        "--attack",
+        action="store_true",
+        help="also build the simulated phishing email and teaching login page",
+    )
+    parser.add_argument(
         "--yes-this-is-me",
         action="store_true",
         help="skip the interactive ownership prompt (only for your own address)",
@@ -68,10 +74,11 @@ async def _run_collectors(target: Target) -> ScanResult:
     return result
 
 
-async def _scan(target: Target) -> tuple[ScanResult, Profile]:
+async def _scan(target: Target, *, with_attack: bool) -> tuple[ScanResult, Profile, Attack | None]:
     result = await _run_collectors(target)
     profile = await build_profile(result)
-    return result, profile
+    attack = await build_attack(result, profile) if with_attack else None
+    return result, profile, attack
 
 
 def _render(result: ScanResult) -> None:
@@ -92,8 +99,18 @@ def _render_profile(profile: Profile) -> None:
     _console.print(f"\n[bold]The picture this builds[/]\n{profile.summary}")
 
 
-def _serve_report(result: ScanResult, profile: Profile) -> None:
-    with local_server(render_html(result, profile)) as server:
+def _render_attack(attack: Attack) -> None:
+    _console.print(
+        f"\n[bold]The attack this makes possible[/] [red](simulation, nothing sent)[/]"
+        f"\nSubject: {attack.email.subject}\n{attack.email.body}"
+    )
+
+
+def _serve_report(result: ScanResult, profile: Profile, attack: Attack | None) -> None:
+    login_page = render_login_page(attack.service) if attack else None
+    notice_page = render_interception_page() if attack else None
+    page = render_html(result, profile, attack)
+    with local_server(page, login_page=login_page, notice_page=notice_page) as server:
         url = server_url(server)
         _console.print(f"\nReport at [link={url}]{url}[/] — press Ctrl+C to stop.")
         webbrowser.open(url)
@@ -110,9 +127,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         _console.print("[bold red]Ownership not confirmed. Refusing to scan.[/]")
         return 1
 
-    result, profile = asyncio.run(_scan(target))
+    result, profile, attack = asyncio.run(_scan(target, with_attack=args.attack))
     _render(result)
     _render_profile(profile)
+    if attack is not None:
+        _render_attack(attack)
     if args.report:
-        _serve_report(result, profile)
+        _serve_report(result, profile, attack)
     return 0

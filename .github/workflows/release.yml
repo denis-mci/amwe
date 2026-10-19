@@ -7,9 +7,10 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: pypi
+    # A v*-test tag is a dry run to TestPyPI; a plain v* tag goes to the real PyPI.
+    environment: ${{ endsWith(github.ref_name, '-test') && 'testpypi' || 'pypi' }}
     permissions:
-      id-token: write # required for PyPI Trusted Publishing (OIDC)
+      id-token: write # required for Trusted Publishing (OIDC)
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -18,5 +19,9 @@ jobs:
         run: uv build
       - name: Check metadata
         run: uvx --from twine twine check dist/*
+      - name: Publish to TestPyPI
+        if: endsWith(github.ref_name, '-test')
+        run: uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always
       - name: Publish to PyPI
+        if: ${{ !endsWith(github.ref_name, '-test') }}
         run: uv publish --trusted-publishing always

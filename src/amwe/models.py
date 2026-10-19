@@ -70,3 +70,26 @@ class Profile:
 
     summary: str
     source: str
+
+
+@dataclass(frozen=True, slots=True)
+class PhishingEmail:
+    """The phishing message an attacker would send, as a teaching artifact.
+
+    Attributes:
+        subject: The message subject, carrying a visible simulation marker.
+        body: The message body, framed by non-removable simulation markers.
+        source: ``"ollama"`` if a local model wrote the body, ``"deterministic"`` otherwise.
+    """
+
+    subject: str
+    body: str
+    source: str
+
+
+@dataclass(frozen=True, slots=True)
+class Attack:
+    """A simulated attack built from a profile. Shown to the target, never sent."""
+
+    email: PhishingEmail
+    service: str

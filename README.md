@@ -68,6 +68,15 @@ amwe you@example.com --username me   # check a specific handle too
 
 AMWE will only scan an address you can prove you control. See [LEGAL.md](LEGAL.md).
 
+## Sources
+
+Every collector is keyless, read-only, and queries only what a logged-out browser can see.
+
+| Collector | Public source | Reports |
+| --- | --- | --- |
+| `git-identity` | GitHub public events and commit metadata | Name and email stamped on your commits |
+| `username` | Profile URLs on GitHub, GitLab, Instagram, Reddit, npm | Accounts that exist under your handle |
+
 ## The one rule
 
 **AMWE scans you, or someone who has explicitly asked you to.** It is a mirror,

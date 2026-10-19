@@ -6,21 +6,14 @@ from amwe.models import Target
 
 
 @pytest.mark.asyncio
-async def test_hit_yields_account_finding(monkeypatch):
+async def test_hit_yields_account_finding(mock_http):
     def handler(request: httpx.Request) -> httpx.Response:
         # Pretend only the GitHub profile exists.
         if "github.com" in str(request.url):
             return httpx.Response(200)
         return httpx.Response(404)
 
-    transport = httpx.MockTransport(handler)
-    original = httpx.AsyncClient
-
-    def patched(*args, **kwargs):
-        kwargs["transport"] = transport
-        return original(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", patched)
+    mock_http(handler)
 
     findings = [f async for f in UsernameCollector().collect(Target("me@example.com", "denis"))]
     values = {f.value for f in findings}

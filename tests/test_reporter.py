@@ -80,3 +80,27 @@ def test_server_rejects_other_paths(served_report):
     with pytest.raises(urllib.error.HTTPError) as error:
         urllib.request.urlopen(served_report + "other")
     assert error.value.code == 404
+
+
+def test_profile_section_shown_when_provided():
+    from amwe.models import Profile
+
+    page = render_html(result_with(), Profile("You are exposed.", "deterministic"))
+
+    assert "The picture this builds" in page
+    assert "You are exposed." in page
+    assert "without a model" in page
+
+
+def test_profile_summary_is_escaped():
+    from amwe.models import Profile
+
+    page = render_html(result_with(), Profile("<b>name</b>", "ollama"))
+
+    assert "<b>name</b>" not in page
+    assert "&lt;b&gt;name&lt;/b&gt;" in page
+    assert "local model" in page
+
+
+def test_no_profile_section_without_profile():
+    assert "The picture this builds" not in render_html(result_with())

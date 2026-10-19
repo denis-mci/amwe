@@ -68,6 +68,8 @@ amwe you@example.com --image-url https://example.com/me.jpg  # check a photo for
 amwe you@example.com --report        # open the findings as a local web page
 ```
 
+The profile — the attacker's view of you — is built on your machine from the findings. If a local [Ollama](https://ollama.com) model is running it writes the summary; otherwise AMWE assembles a deterministic one. Either way nothing leaves your machine, and the report says which path was used.
+
 The report is served on `127.0.0.1` only and loads nothing from the network.
 GPS findings link to your own map app via a `geo:` URI, not to an online map.
 

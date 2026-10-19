@@ -17,7 +17,8 @@ from rich.table import Table
 
 import amwe.collectors  # noqa: F401  (registers built-in collectors on import)
 from amwe.collectors.base import all_collectors
-from amwe.models import ScanResult, Target
+from amwe.models import Profile, ScanResult, Target
+from amwe.profiler import build_profile
 from amwe.reporter import local_server, render_html, server_url
 from amwe.verify.email_verify import ConsoleVerifier, Verifier
 
@@ -67,6 +68,12 @@ async def _run_collectors(target: Target) -> ScanResult:
     return result
 
 
+async def _scan(target: Target) -> tuple[ScanResult, Profile]:
+    result = await _run_collectors(target)
+    profile = await build_profile(result)
+    return result, profile
+
+
 def _render(result: ScanResult) -> None:
     table = Table(title="What an attacker can already see about you")
     table.add_column("Source", style="cyan")
@@ -81,8 +88,12 @@ def _render(result: ScanResult) -> None:
     )
 
 
-def _serve_report(result: ScanResult) -> None:
-    with local_server(render_html(result)) as server:
+def _render_profile(profile: Profile) -> None:
+    _console.print(f"\n[bold]The picture this builds[/]\n{profile.summary}")
+
+
+def _serve_report(result: ScanResult, profile: Profile) -> None:
+    with local_server(render_html(result, profile)) as server:
         url = server_url(server)
         _console.print(f"\nReport at [link={url}]{url}[/] — press Ctrl+C to stop.")
         webbrowser.open(url)
@@ -99,8 +110,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         _console.print("[bold red]Ownership not confirmed. Refusing to scan.[/]")
         return 1
 
-    result = asyncio.run(_run_collectors(target))
+    result, profile = asyncio.run(_scan(target))
     _render(result)
+    _render_profile(profile)
     if args.report:
-        _serve_report(result)
+        _serve_report(result, profile)
     return 0

@@ -57,3 +57,16 @@ class ScanResult:
 
     def by_source(self, source: str) -> list[Finding]:
         return [f for f in self.findings if f.source == source]
+
+
+@dataclass(frozen=True, slots=True)
+class Profile:
+    """The attacker's-eye summary of a scan, assembled on the user's machine.
+
+    Attributes:
+        summary: The readable picture the findings add up to.
+        source: ``"ollama"`` if a local model wrote it, ``"deterministic"`` otherwise.
+    """
+
+    summary: str
+    source: str

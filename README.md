@@ -64,6 +64,7 @@ A single-binary release and a Homebrew tap are on the roadmap.
 ```bash
 amwe you@example.com                 # scan your address
 amwe you@example.com --username me   # check a specific handle too
+amwe you@example.com --image-url https://example.com/me.jpg  # check a photo for GPS data
 ```
 
 AMWE will only scan an address you can prove you control. See [LEGAL.md](LEGAL.md).
@@ -74,6 +75,7 @@ Every collector is keyless, read-only, and queries only what a logged-out browse
 
 | Collector | Public source | Reports |
 | --- | --- | --- |
+| `exif` | A public photo URL you pass with `--image-url` | GPS coordinates embedded in the JPEG |
 | `git-identity` | GitHub public events and commit metadata | Name and email stamped on your commits |
 | `username` | Profile URLs on GitHub, GitLab, Instagram, Reddit, npm | Accounts that exist under your handle |
 

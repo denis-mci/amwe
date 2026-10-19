@@ -32,6 +32,10 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         help="handle to check across platforms (defaults to the email local part)",
     )
     parser.add_argument(
+        "--image-url",
+        help="public URL of a photo of yours to check for embedded GPS coordinates",
+    )
+    parser.add_argument(
         "--yes-this-is-me",
         action="store_true",
         help="skip the interactive ownership prompt (only for your own address)",
@@ -72,7 +76,7 @@ def _render(result: ScanResult) -> None:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     username = args.username or args.email.split("@", 1)[0]
-    target = Target(email=args.email, username=username)
+    target = Target(email=args.email, username=username, image_url=args.image_url)
 
     if not _prove_ownership(target.email, ConsoleVerifier(), skip=args.yes_this_is_me):
         _console.print("[bold red]Ownership not confirmed. Refusing to scan.[/]")

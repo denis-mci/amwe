@@ -1,1 +1,5 @@
-"""The reporter stage. v0.1 ships the collect+report path first; this is the next slice."""
+"""The reporter stage: one self-contained HTML page."""
+
+from amwe.reporter.page import render_html
+
+__all__ = ["render_html"]

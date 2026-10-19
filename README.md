@@ -47,6 +47,15 @@ the raw hits into something you actually understand: a story, and then an attack
 | **Attack** | Builds the personalized phishing email an attacker would send you, plus a teaching login page that *never accepts input*. |
 | **Report** | Renders it all as one shareable local page. |
 
+## The attack it simulates
+
+With `--attack`, AMWE turns the profile into the phishing email an attacker would
+send you and a teaching login page styled after a service you actually use. Both
+are shown to you in the local report and marked as a simulation in their own
+content. AMWE sends nothing — there is no delivery path — and the login page
+rejects every input, enforced by `form-action 'self'` and client-side
+interception, not just a warning. Nothing you type into it is stored or sent.
+
 ## Install
 
 ```bash
@@ -66,6 +75,7 @@ amwe you@example.com                 # scan your address
 amwe you@example.com --username me   # check a specific handle too
 amwe you@example.com --image-url https://example.com/me.jpg  # check a photo for GPS data
 amwe you@example.com --report        # open the findings as a local web page
+amwe you@example.com --attack        # also build the simulated phishing mail and login page
 ```
 
 The profile — the attacker's view of you — is built on your machine from the findings. If a local [Ollama](https://ollama.com) model is running it writes the summary; otherwise AMWE assembles a deterministic one. Either way nothing leaves your machine, and the report says which path was used.

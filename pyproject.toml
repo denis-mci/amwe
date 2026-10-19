@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Attack Me With Everything — see what an attacker can build from your own public data."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "denis-mci" }]
 keywords = ["osint", "security", "phishing-simulation", "privacy", "recon"]
 classifiers = [
